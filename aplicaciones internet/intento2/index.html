@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego de Memoria</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <h1>Juego de Memoria</h1>
+
+  <div id="niveles">
+
+    <!-- Pantalla Nivel 1 -->
+    <div class="nivel pantalla activa" id="nivel1">
+      <h2>Nivel 1</h2>
+      <div class="fila fila1">
+        <button>1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>4</button>
+        <button>5</button>
+        <button>6</button>
+        <button>7</button>
+        <button>8</button>
+        <button>9</button>
+        <button>10</button>
+      </div>
+      <p class="tiempo" id="tiempo1">⏱ Tiempo: 0 s</p>
+      <button class="reset" data-fila="fila1">🔄 Reset</button>
+      <div class="nav">
+        <button class="next">➡ Siguiente</button>
+      </div>
+    </div>
+
+    <!-- Pantalla Nivel 2 -->
+    <div class="nivel pantalla" id="nivel2">
+      <h2>Nivel 2</h2>
+      <div class="fila fila2">
+        <button>1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>4</button>
+        <button>5</button>
+        <button>6</button>
+        <button>7</button>
+        <button>8</button>
+        <button>9</button>
+        <button>10</button>
+        <button>11</button>
+        <button>12</button>
+        <button>13</button>
+        <button>14</button>
+        <button>15</button>
+      </div>
+      <p class="tiempo" id="tiempo2">⏱ Tiempo: 0 s</p>
+      <button class="reset" data-fila="fila2">🔄 Reset</button>
+      <div class="nav">
+        <button class="prev">⬅ Anterior</button>
+        <button class="next">➡ Siguiente</button>
+      </div>
+    </div>
+
+    <!-- Pantalla Nivel 3 (Cubo 6x6) -->
+    <div class="nivel pantalla" id="nivel3">
+      <h2>Nivel 3</h2>
+      <div class="fila fila3">
+        <!-- Generaremos botones 1-36 automáticamente con JS si quieres -->
+        <button>1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>4</button>
+        <button>5</button>
+        <button>6</button>
+        <button>7</button>
+        <button>8</button>
+        <button>9</button>
+        <button>10</button>
+        <button>11</button>
+        <button>12</button>
+        <button>13</button>
+        <button>14</button>
+        <button>15</button>
+        <button>16</button>
+        <button>17</button>
+        <button>18</button>
+        <button>19</button>
+        <button>20</button>
+        <button>21</button>
+        <button>22</button>
+        <button>23</button>
+        <button>24</button>
+        <button>25</button>
+        <button>26</button>
+        <button>27</button>
+        <button>28</button>
+        <button>29</button>
+        <button>30</button>
+        <button>31</button>
+        <button>32</button>
+        <button>33</button>
+        <button>34</button>
+        <button>35</button>
+        <button>36</button>
+      </div>
+      <p class="tiempo" id="tiempo3">⏱ Tiempo: 0 s</p>
+      <button class="reset" data-fila="fila3">🔄 Reset</button>
+      <div class="nav">
+        <button class="prev">⬅ Anterior</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
