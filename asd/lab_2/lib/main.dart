@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+void main() {
+  runApp(const DrawerExample());
+}
+
 class DrawerExample extends StatelessWidget {
   const DrawerExample({super.key});
 
