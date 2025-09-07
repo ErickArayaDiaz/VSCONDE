@@ -1,122 +1,195 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(PizarraApp());
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
+class PizarraApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'Pizarra Flutter',
+      debugShowCheckedModeBanner: false,
+      home: PizarraPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class DrawPoint {
+  final Offset point;
+  final Paint paint;
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  DrawPoint({required this.point, required this.paint});
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class PizarraPage extends StatefulWidget {
+  @override
+  _PizarraPageState createState() => _PizarraPageState();
+}
 
-  void _incrementCounter() {
+class _PizarraPageState extends State<PizarraPage> {
+  List<DrawPoint?> _points = [];
+  Color _selectedColor = Colors.black;
+  double _strokeWidth = 4.0;
+  bool _isEraser = false;
+
+  void _clearCanvas() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _points.clear();
+    });
+  }
+
+  void _toggleEraser() {
+    setState(() {
+      _isEraser = !_isEraser;
+    });
+  }
+
+  void _changeColor(Color color) {
+    setState(() {
+      _selectedColor = color;
+      _isEraser = false; // Desactiva el borrador si cambia color
+    });
+  }
+
+  void _changeStrokeWidth(double value) {
+    setState(() {
+      _strokeWidth = value;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('Pizarra Flutter'),
+        backgroundColor: _isEraser ? Colors.red[400] : Colors.blue,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete),
+            tooltip: 'Borrar todo',
+            onPressed: _clearCanvas,
+          ),
+          IconButton(
+            icon: Icon(_isEraser ? Icons.brush : Icons.clear),
+            tooltip: _isEraser ? 'Modo dibujar' : 'Modo borrar',
+            onPressed: _toggleEraser,
+          ),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body: Column(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                RenderBox renderBox = context.findRenderObject() as RenderBox;
+                Offset point = renderBox.globalToLocal(details.globalPosition);
+
+                Paint paint = Paint()
+                  ..color = _isEraser ? Colors.white : _selectedColor
+                  ..strokeWidth = _strokeWidth
+                  ..strokeCap = StrokeCap.round;
+
+                setState(() {
+                  _points.add(DrawPoint(point: point, paint: paint));
+                });
+              },
+              onPanEnd: (details) {
+                setState(() {
+                  _points.add(null); // separador entre trazos
+                });
+              },
+              child: CustomPaint(
+                painter: PizarraPainter(points: _points),
+                size: Size.infinite,
+              ),
             ),
-          ],
-        ),
+          ),
+          SizedBox(height: 10),
+          _buildColorPicker(),
+          _buildStrokeSlider(),
+          SizedBox(height: 10),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+
+  Widget _buildColorPicker() {
+    final colors = [
+      Colors.black,
+      Colors.red,
+      Colors.green,
+      Colors.blue,
+      Colors.orange,
+      Colors.purple,
+      Colors.brown,
+    ];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: colors
+          .map(
+            (color) => GestureDetector(
+              onTap: () => _changeColor(color),
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 4),
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: _selectedColor == color ? Colors.white : Colors.grey,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildStrokeSlider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          Text('Tamaño:'),
+          Expanded(
+            child: Slider(
+              value: _strokeWidth,
+              min: 1.0,
+              max: 20.0,
+              activeColor: _selectedColor,
+              label: _strokeWidth.toStringAsFixed(1),
+              onChanged: (value) => _changeStrokeWidth(value),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PizarraPainter extends CustomPainter {
+  final List<DrawPoint?> points;
+
+  PizarraPainter({required this.points});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (int i = 0; i < points.length - 1; i++) {
+      final p1 = points[i];
+      final p2 = points[i + 1];
+
+      if (p1 != null && p2 != null) {
+        canvas.drawLine(p1.point, p2.point, p1.paint);
+      } else if (p1 != null && p2 == null) {
+        canvas.drawPoints(ui.PointMode.points, [p1.point], p1.paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
 }
