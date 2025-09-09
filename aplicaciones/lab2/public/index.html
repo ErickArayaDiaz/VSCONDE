@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pizarra Colaborativa Avanzada</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+    #toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #f4f4f4;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    canvas {
+      display: block;
+      margin-top: 60px; /* espacio para la barra */
+    }
+  </style>
+</head>
+<body>
+  <!-- Barra de herramientas -->
+  <div id="toolbar">
+    <label>Color:</label>
+    <input type="color" id="color" value="#000000">
+
+    <label>Tamaño:</label>
+    <input type="range" id="size" min="1" max="20" value="3">
+
+    <select id="tool">
+      <option value="pencil">✏️ Lápiz</option>
+      <option value="eraser">🩹 Borrador</option>
+      <option value="rectangle">▭ Rectángulo</option>
+      <option value="circle">⚪ Círculo</option>
+      <option value="triangle">🔺 Triángulo</option>
+    </select>
+
+    <button id="clear">🗑️ Limpiar</button>
+  </div>
+
+  <canvas id="board"></canvas>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const canvas = document.getElementById("board");
+    const ctx = canvas.getContext("2d");
+
+    // Ajustar canvas
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Herramientas
+    let painting = false;
+    let tool = "pencil";
+    let color = document.getElementById("color").value;
+    let size = document.getElementById("size").value;
+    let startX, startY;
+
+    document.getElementById("color").oninput = e => color = e.target.value;
+    document.getElementById("size").oninput = e => size = e.target.value;
+    document.getElementById("tool").oninput = e => tool = e.target.value;
+    document.getElementById("clear").onclick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      socket.emit("clear");
+    };
+
+    function getMousePos(canvas, evt) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: evt.clientX - rect.left,
+            y: evt.clientY - rect.top
+      };
+    }
+
+
+function startDraw(e) {
+  painting = true;
+  const pos = getMousePos(canvas, e);
+  startX = pos.x;
+  startY = pos.y;
+  if (tool === "pencil" || tool === "eraser") draw(e);
+}
+
+function draw(e) {
+  if (!painting) return;
+  const pos = getMousePos(canvas, e);
+
+  if (tool === "pencil" || tool === "eraser") {
+    const drawColor = tool === "eraser" ? "#ffffff" : color;
+    ctx.lineWidth = size;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = drawColor;
+
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+
+    socket.emit("draw", {
+      tool, x: pos.x, y: pos.y,
+      color: drawColor, size
+    });
+  }
+}
+
+function endDraw(e) {
+  if (!painting) return;
+  painting = false;
+  ctx.beginPath();
+
+  if (tool !== "pencil" && tool !== "eraser") {
+    const pos = getMousePos(canvas, e);
+    drawShape(startX, startY, pos.x, pos.y, tool, color, size, true);
+  }
+}
+
+
+    function draw(e) {
+      if (!painting) return;
+      if (tool === "pencil" || tool === "eraser") {
+        const drawColor = tool === "eraser" ? "#ffffff" : color;
+        ctx.lineWidth = size;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = drawColor;
+
+        ctx.lineTo(e.clientX, e.clientY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX, e.clientY);
+
+        socket.emit("draw", {
+          tool, x: e.clientX, y: e.clientY,
+          color: drawColor, size
+        });
+      }
+    }
+
+    function drawShape(x1, y1, x2, y2, tool, color, size, emit = false) {
+      const w = x2 - x1;
+      const h = y2 - y1;
+
+      ctx.lineWidth = size;
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+
+      if (tool === "rectangle") {
+        ctx.rect(x1, y1, w, h);
+      } else if (tool === "circle") {
+        const r = Math.sqrt(w * w + h * h) / 2;
+        ctx.arc(x1 + w / 2, y1 + h / 2, r, 0, Math.PI * 2);
+      } else if (tool === "triangle") {
+        ctx.moveTo(x1 + w / 2, y1);
+        ctx.lineTo(x1, y1 + h);
+        ctx.lineTo(x1 + w, y1 + h);
+        ctx.closePath();
+      }
+
+      ctx.stroke();
+
+      if (emit) {
+        socket.emit("shape", { x1, y1, x2, y2, tool, color, size });
+      }
+    }
+
+    // Eventos de mouse
+    canvas.addEventListener("mousedown", startDraw);
+    canvas.addEventListener("mouseup", endDraw);
+    canvas.addEventListener("mousemove", draw);
+
+    // --- Eventos de red ---
+    socket.on("draw", (data) => {
+        ctx.lineWidth = data.size;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = data.color;
+        ctx.lineTo(data.x, data.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(data.x, data.y);
+    });
+
+
+    socket.on("shape", (data) => {
+      drawShape(data.x1, data.y1, data.x2, data.y2, data.tool, data.color, data.size);
+    });
+
+    socket.on("clear", () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+  </script>
+</body>
+</html>
