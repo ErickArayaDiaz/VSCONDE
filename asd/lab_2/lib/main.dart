@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 void main() => runApp(PizarraApp());
 
 class PizarraApp extends StatelessWidget {
+  const PizarraApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -22,12 +24,14 @@ class DrawPoint {
 }
 
 class PizarraPage extends StatefulWidget {
+  const PizarraPage({super.key});
+
   @override
   _PizarraPageState createState() => _PizarraPageState();
 }
 
 class _PizarraPageState extends State<PizarraPage> {
-  List<DrawPoint?> _points = [];
+  final List<DrawPoint?> _points = [];
   Color _selectedColor = Colors.black;
   double _strokeWidth = 4.0;
   bool _isEraser = false;

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/project_provider.dart';
-import '../models/project.dart';
 import 'add_project_screen.dart';
 import 'project_detail_screen.dart';
 import 'package:intl/intl.dart';
