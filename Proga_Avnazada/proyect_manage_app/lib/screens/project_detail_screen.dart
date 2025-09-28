@@ -17,7 +17,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargar tareas del proyecto al entrar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TaskProvider>(
         context,
@@ -32,21 +31,49 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.project.name)),
-      body: taskProvider.tasks.isEmpty
-          ? const Center(child: Text("No hay tareas aún."))
-          : ListView.builder(
-              itemCount: taskProvider.tasks.length,
-              itemBuilder: (context, index) {
-                final task = taskProvider.tasks[index];
-                return CheckboxListTile(
-                  title: Text(task.title),
-                  value: task.isDone,
-                  onChanged: (_) {
-                    taskProvider.toggleTask(task);
-                  },
-                );
-              },
+      body: Column(
+        children: [
+          // 🔹 Barra de progreso
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                LinearProgressIndicator(
+                  value: taskProvider.getProgress(),
+                  minHeight: 10,
+                  backgroundColor: Colors.grey[300],
+                  color: Colors.blue,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Progreso: ${(taskProvider.getProgress() * 100).toStringAsFixed(0)}%",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
+          ),
+          const Divider(),
+
+          // 🔹 Lista de tareas
+          Expanded(
+            child: taskProvider.tasks.isEmpty
+                ? const Center(child: Text("No hay tareas aún."))
+                : ListView.builder(
+                    itemCount: taskProvider.tasks.length,
+                    itemBuilder: (context, index) {
+                      final task = taskProvider.tasks[index];
+                      return CheckboxListTile(
+                        title: Text(task.title),
+                        value: task.isDone,
+                        onChanged: (_) {
+                          taskProvider.toggleTask(task);
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _showAddTaskDialog(context, taskProvider);

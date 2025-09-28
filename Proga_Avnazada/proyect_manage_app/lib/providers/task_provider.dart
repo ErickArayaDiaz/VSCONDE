@@ -27,4 +27,11 @@ class TaskProvider with ChangeNotifier {
     await DatabaseHelper.instance.updateTask(updatedTask);
     await loadTasks(task.projectId);
   }
+
+  //  Nuevo: calcular progreso del proyecto
+  double getProgress() {
+    if (_tasks.isEmpty) return 0.0;
+    final completed = _tasks.where((t) => t.isDone).length;
+    return completed / _tasks.length;
+  }
 }

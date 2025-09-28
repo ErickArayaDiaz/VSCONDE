@@ -1,7 +1,9 @@
+// lib/screens/add_project_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/project_provider.dart';
 import '../models/project.dart';
+import '../services/calendar_service.dart'; // <- importa el servicio
 
 class AddProjectScreen extends StatefulWidget {
   const AddProjectScreen({super.key});
@@ -13,7 +15,7 @@ class AddProjectScreen extends StatefulWidget {
 class _AddProjectScreenState extends State<AddProjectScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _descriptionController = TextEditingController(); // nombre correcto
   DateTime? _selectedDate;
 
   @override
@@ -59,13 +61,11 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                       final picked = await showDatePicker(
                         context: context,
                         initialDate: DateTime.now(),
-                        firstDate: DateTime(2020),
+                        firstDate: DateTime(2000),
                         lastDate: DateTime(2100),
                       );
                       if (picked != null) {
-                        setState(() {
-                          _selectedDate = picked;
-                        });
+                        setState(() => _selectedDate = picked);
                       }
                     },
                     child: const Text("Seleccionar"),
@@ -74,16 +74,58 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  // <- async porque llamamos a DB y calendario
                   if (_formKey.currentState!.validate() &&
                       _selectedDate != null) {
                     final newProject = Project(
-                      name: _nameController.text,
-                      description: _descriptionController.text,
+                      name: _nameController.text.trim(),
+                      description: _descriptionController.text.trim(),
                       deadline: _selectedDate!,
                     );
-                    projectProvider.addProject(newProject);
+
+                    try {
+                      // 1) Guardar en la BD local
+                      await projectProvider.addProject(newProject);
+
+                      // 2) Agregar evento al calendario del dispositivo
+                      final calendarService = CalendarService();
+                      final success = await calendarService
+                          .addProjectDeadlineToCalendar(
+                            newProject.name,
+                            newProject.description,
+                            newProject.deadline,
+                          );
+
+                      // Mensaje opcional
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Deadline agregado al calendario'),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('No se pudo agregar al calendario'),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    }
+
                     Navigator.pop(context);
+                  } else {
+                    if (_selectedDate == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Selecciona una fecha límite'),
+                        ),
+                      );
+                    }
                   }
                 },
                 child: const Text("Guardar Proyecto"),
