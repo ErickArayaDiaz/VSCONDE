@@ -35,7 +35,7 @@ class CalendarService {
 
     final event = Event(
       calendar.id,
-      title: '📌 Deadline: $title',
+      title: ' Deadline: $title',
       description: description,
       start: tzStart,
       end: tzEnd,
