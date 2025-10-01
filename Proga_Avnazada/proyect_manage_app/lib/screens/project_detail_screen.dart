@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/project.dart';
-import '../providers/task_provider.dart';
 import '../models/task.dart';
+import '../providers/task_provider.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final Project project;
@@ -14,103 +14,110 @@ class ProjectDetailScreen extends StatefulWidget {
 }
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
+  final _taskController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TaskProvider>(
-        context,
-        listen: false,
-      ).loadTasks(widget.project.id!);
-    });
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    taskProvider.fetchTasks(widget.project.id!); // cargar tareas al abrir
+    taskProvider.subscribeToChanges(widget.project.id!); // escuchar realtime
   }
 
   @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
+    final tasks = taskProvider.tasks;
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.project.name)),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔹 Barra de progreso
+          // Descripción
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                LinearProgressIndicator(
-                  value: taskProvider.getProgress(),
-                  minHeight: 10,
-                  backgroundColor: Colors.grey[300],
-                  color: Colors.blue,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Progreso: ${(taskProvider.getProgress() * 100).toStringAsFixed(0)}%",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              widget.project.description,
+              style: const TextStyle(fontSize: 16),
             ),
           ),
+
+          // Fecha límite
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              "Fecha límite: ${widget.project.deadline.day}/${widget.project.deadline.month}/${widget.project.deadline.year}",
+              style: const TextStyle(color: Colors.redAccent),
+            ),
+          ),
+
           const Divider(),
 
-          // 🔹 Lista de tareas
+          // Lista de tareas
           Expanded(
-            child: taskProvider.tasks.isEmpty
+            child: tasks.isEmpty
                 ? const Center(child: Text("No hay tareas aún."))
                 : ListView.builder(
-                    itemCount: taskProvider.tasks.length,
+                    itemCount: tasks.length,
                     itemBuilder: (context, index) {
-                      final task = taskProvider.tasks[index];
-                      return CheckboxListTile(
-                        title: Text(task.title),
-                        value: task.isDone,
-                        onChanged: (_) {
-                          taskProvider.toggleTask(task);
-                        },
+                      final task = tasks[index];
+                      return ListTile(
+                        leading: Checkbox(
+                          value: task.isDone,
+                          onChanged: (_) {
+                            taskProvider.toggleTask(task);
+                          },
+                        ),
+                        title: Text(
+                          task.title,
+                          style: TextStyle(
+                            decoration: task.isDone
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            taskProvider.deleteTask(task.id!, task.projectId);
+                          },
+                        ),
                       );
                     },
                   ),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddTaskDialog(context, taskProvider);
-        },
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
 
-  void _showAddTaskDialog(BuildContext context, TaskProvider taskProvider) {
-    final TextEditingController controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Nueva tarea"),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: "Título de la tarea"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                final newTask = Task(
-                  projectId: widget.project.id!,
-                  title: controller.text,
-                );
-                taskProvider.addTask(newTask);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("Guardar"),
+          // Input para agregar tarea
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _taskController,
+                    decoration: const InputDecoration(
+                      hintText: "Nueva tarea...",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_taskController.text.isNotEmpty) {
+                      final newTask = Task(
+                        projectId: widget.project.id!,
+                        title: _taskController.text,
+                      );
+                      taskProvider.addTask(newTask);
+                      _taskController.clear();
+                    }
+                  },
+                  child: const Text("Añadir"),
+                ),
+              ],
+            ),
           ),
         ],
       ),

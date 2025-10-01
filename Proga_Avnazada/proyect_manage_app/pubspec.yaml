@@ -45,7 +45,12 @@ dependencies:
   device_calendar: 4.3.3
   #zona de tiempo 
   timezone: ^0.9.0
-
+  #supabase
+  supabase_flutter: ^2.3.4
+  # Para offline opcional
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  connectivity_plus: ^7.0.0
 
 dev_dependencies:
   flutter_test:

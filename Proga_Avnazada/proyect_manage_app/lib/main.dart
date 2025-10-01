@@ -5,13 +5,24 @@ import 'providers/task_provider.dart';
 import 'screens/home_screen.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  tz.initializeTimeZones(); // inicializar zonas horarias
-  final String localName = tz.local.name; // tu zona horaria local
-  tz.setLocalLocation(tz.getLocation(localName));
+  // Inicializar Supabase
+  await Supabase.initialize(
+    url: 'https://mjasxxpnshypxacnzqqr.supabase.co', // pon tu URL aquí
+    anonKey: 'sb_publishable_86HA7CimXy3vsX7-zgeFEQ_TgHTPGY6', // tu Anon Key
+  );
+
+  // Inicializar Hive (para modo offline/local)
+  await Hive.initFlutter();
+
+  // Inicializar Timezone
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.local);
 
   runApp(
     MultiProvider(

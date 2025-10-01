@@ -24,7 +24,9 @@ class HomeScreen extends StatelessWidget {
 
                 // Obtener tareas de este proyecto
                 final tasks = taskProvider.tasks
-                    .where((t) => t.projectId == project.id)
+                    .where(
+                      (t) => t.projectId == project.id,
+                    ) // project.id ahora es String
                     .toList();
 
                 // Calcular progreso

@@ -1,31 +1,35 @@
 class Task {
-  final int? id;
-  final int projectId; // Relación: a qué proyecto pertenece
+  final String? id;
+  final String projectId;
   final String title;
-  final bool isDone; // true = completada
+  final bool isDone;
+  final DateTime updatedAt;
 
   Task({
     this.id,
     required this.projectId,
     required this.title,
     this.isDone = false,
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'projectId': projectId,
       'title': title,
-      'isDone': isDone ? 1 : 0, // SQLite no maneja bool, usamos 0/1
+      'isDone': isDone,
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 
   factory Task.fromMap(Map<String, dynamic> map) {
     return Task(
-      id: map['id'],
-      projectId: map['projectId'],
-      title: map['title'],
-      isDone: map['isDone'] == 1,
+      id: map['id']?.toString(),
+      projectId: map['projectId'] ?? '',
+      title: map['title'] ?? '',
+      isDone: map['isDone'] == true || map['isDone'] == 1,
+      updatedAt: DateTime.parse(map['updated_at']),
     );
   }
 }

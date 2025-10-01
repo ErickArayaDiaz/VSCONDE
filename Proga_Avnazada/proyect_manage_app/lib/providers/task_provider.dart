@@ -1,37 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/task.dart';
-import '../db/database_helper.dart';
 
 class TaskProvider with ChangeNotifier {
+  final supabase = Supabase.instance.client;
   List<Task> _tasks = [];
 
   List<Task> get tasks => _tasks;
 
-  Future<void> loadTasks(int projectId) async {
-    _tasks = await DatabaseHelper.instance.getTasks(projectId);
+  /// Cargar tareas de un proyecto específico
+  Future<void> fetchTasks(String projectId) async {
+    final response = await supabase
+        .from('tasks')
+        .select()
+        .eq('project_id', projectId);
+
+    _tasks = (response as List).map((t) => Task.fromMap(t)).toList();
     notifyListeners();
   }
 
+  /// Agregar una nueva tarea
   Future<void> addTask(Task task) async {
-    await DatabaseHelper.instance.insertTask(task);
-    await loadTasks(task.projectId);
+    await supabase.from('tasks').insert(task.toMap());
+    await fetchTasks(task.projectId);
   }
 
+  /// Actualizar estado de tarea (completada o no)
   Future<void> toggleTask(Task task) async {
-    final updatedTask = Task(
-      id: task.id,
-      projectId: task.projectId,
-      title: task.title,
-      isDone: !task.isDone,
-    );
-    await DatabaseHelper.instance.updateTask(updatedTask);
-    await loadTasks(task.projectId);
+    await supabase
+        .from('tasks')
+        .update({'is_done': !task.isDone})
+        .eq('id', task.id!);
+
+    await fetchTasks(task.projectId);
   }
 
-  //  Nuevo: calcular progreso del proyecto
-  double getProgress() {
-    if (_tasks.isEmpty) return 0.0;
-    final completed = _tasks.where((t) => t.isDone).length;
-    return completed / _tasks.length;
+  /// Eliminar tarea
+  Future<void> deleteTask(String id, String projectId) async {
+    await supabase.from('tasks').delete().eq('id', id);
+    await fetchTasks(projectId);
+  }
+
+  /// Suscribirse a cambios en tiempo real
+  void subscribeToChanges(String projectId) {
+    final channel = supabase.channel('public:tasks');
+
+    channel.onPostgresChanges(
+      event: PostgresChangeEvent
+          .all, // puedes usar PostgresChangeEvent.insert, PostgresChangeEvent.update, PostgresChangeEvent.delete o PostgresChangeEvent.all
+      schema: 'public',
+      table: 'tasks',
+      callback: (payload) async {
+        await fetchTasks(projectId);
+      },
+    );
+
+    channel.subscribe();
   }
 }
