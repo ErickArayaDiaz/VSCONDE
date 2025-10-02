@@ -41,14 +41,19 @@ class TaskProvider with ChangeNotifier {
     await fetchTasks(projectId);
   }
 
-  /// Suscribirse a cambios en tiempo real
+  /// Suscribirse a cambios en la tabla tasks
   void subscribeToChanges(String projectId) {
-    supabase.channel('public:tasks').on(
-      RealtimeListenTypes.postgresChanges,
-      ChannelFilter(event: '*', schema: 'public', table: 'tasks'),
-      (payload, [ref]) async {
-        await fetchTasks(projectId);
-      },
-    ).subscribe();
+    final channel = Supabase.instance.client.channel('tasks-channel');
+
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all, // insert, update, delete
+          schema: 'public',
+          table: 'tasks',
+          callback: (payload) async {
+            await fetchTasks(projectId); // recargar lista de tareas
+          },
+        )
+        .subscribe();
   }
 }
