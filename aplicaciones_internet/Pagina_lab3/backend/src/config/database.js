@@ -1,18 +1,10 @@
-// src/config/database.js
 import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
 
-dotenv.config();
-
-const sequelize = new Sequelize(
-  process.env.DB_NAME || "tasksdb",
-  process.env.DB_USER || "postgres",
-  process.env.DB_PASS || "postgres",
-  {
-    host: process.env.DB_HOST || "localhost",
-    dialect: "postgres",
-    logging: false,
-  }
-);
+// Usamos SQLite para laboratorio: crea un archivo local database.sqlite
+const sequelize = new Sequelize({
+  dialect: "sqlite",
+  storage: "./database.sqlite",
+  logging: false, // no mostrar logs SQL en consola
+});
 
 export default sequelize;

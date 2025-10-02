@@ -6,23 +6,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// test route
-app.get("/", (req, res) => {
-  res.send("🚀 Backend funcionando!");
-});
+// Ruta de prueba
+app.get("/", (req, res) => res.send("🚀 Backend funcionando con SQLite!"));
 
-// conectar a DB
+// Iniciar DB y servidor
 (async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync();
-    console.log("✅ DB conectada y tablas sincronizadas");
+    await sequelize.sync({ alter: true }); // crea tablas automáticamente
+    console.log("✅ DB SQLite conectada y tablas sincronizadas");
   } catch (error) {
     console.error("❌ Error al conectar DB:", error);
   }
 })();
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Servidor en http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
