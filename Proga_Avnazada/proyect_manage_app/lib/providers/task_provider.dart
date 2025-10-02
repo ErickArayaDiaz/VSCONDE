@@ -43,18 +43,12 @@ class TaskProvider with ChangeNotifier {
 
   /// Suscribirse a cambios en tiempo real
   void subscribeToChanges(String projectId) {
-    final channel = supabase.channel('public:tasks');
-
-    channel.onPostgresChanges(
-      event: PostgresChangeEvent
-          .all, // puedes usar PostgresChangeEvent.insert, PostgresChangeEvent.update, PostgresChangeEvent.delete o PostgresChangeEvent.all
-      schema: 'public',
-      table: 'tasks',
-      callback: (payload) async {
+    supabase.channel('public:tasks').on(
+      RealtimeListenTypes.postgresChanges,
+      ChannelFilter(event: '*', schema: 'public', table: 'tasks'),
+      (payload, [ref]) async {
         await fetchTasks(projectId);
       },
-    );
-
-    channel.subscribe();
+    ).subscribe();
   }
 }
