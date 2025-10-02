@@ -1,9 +1,10 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+import { Sequelize } from "sequelize";
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: 'postgres',
-  logging: false
+// Para SQLite
+const sequelize = new Sequelize({
+  dialect: "sqlite",
+  storage: "database.sqlite",
+  logging: false, // opcional, quita logs de SQL
 });
 
-module.exports = sequelize;
+export default sequelize;

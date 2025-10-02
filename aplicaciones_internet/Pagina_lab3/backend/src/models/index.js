@@ -1,10 +1,13 @@
-const Sequelize = require('sequelize');
-const sequelize = require('../config/db');
+import Sequelize from "sequelize";
+import sequelize from "../config/db.js";
 
-const User = require('./user')(sequelize, Sequelize.DataTypes);
-const Task = require('./task')(sequelize, Sequelize.DataTypes);
+import UserModel from "./user.js";
+import TaskModel from "./task.js";
 
-User.hasMany(Task, { foreignKey: 'userId' });
-Task.belongsTo(User, { foreignKey: 'userId' });
+const User = UserModel(sequelize, Sequelize.DataTypes);
+const Task = TaskModel(sequelize, Sequelize.DataTypes);
 
-module.exports = { sequelize, User, Task };
+User.hasMany(Task, { foreignKey: "userId" });
+Task.belongsTo(User, { foreignKey: "userId" });
+
+export { sequelize, User, Task };
