@@ -1,24 +1,25 @@
 import express from "express";
-import cors from "cors";
-import sequelize from "./config/database.js";
+import dotenv from "dotenv";
+import { sequelize } from "./models/index.js";  // importa sequelize ya configurado
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
-// Ruta de prueba
-app.get("/", (req, res) => res.send("🚀 Backend funcionando con SQLite!"));
+// importa rutas
+import authRoutes from "./routes/auth.js";
+app.use("/api/auth", authRoutes);
 
-// Iniciar DB y servidor
-(async () => {
-  try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true }); // crea tablas automáticamente
+// Sincronizar DB
+sequelize.sync({ force: true }) // ⚠️ recrea tablas
+  .then(() => {
     console.log("✅ DB SQLite conectada y tablas sincronizadas");
-  } catch (error) {
-    console.error("❌ Error al conectar DB:", error);
-  }
-})();
+  })
+  .catch(err => {
+    console.error("❌ Error en DB:", err);
+  });
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+app.listen(4000, () => {
+  console.log("Servidor corriendo en http://localhost:4000");
+});
