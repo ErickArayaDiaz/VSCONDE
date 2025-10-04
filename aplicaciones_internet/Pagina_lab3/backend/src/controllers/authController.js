@@ -1,17 +1,14 @@
+// backend/src/controllers/authController.js
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { User } from "../models/index.js"; 
+import { User } from "../models/index.js";
 import dotenv from "dotenv";
-
-
 dotenv.config();
 
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Missing fields" });
-    }
+    if (!name || !email || !password) return res.status(400).json({ message: "Missing fields" });
 
     const exists = await User.findOne({ where: { email } });
     if (exists) return res.status(400).json({ message: "Email already registered" });
@@ -19,12 +16,13 @@ export const register = async (req, res) => {
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password_hash: hash });
 
-    return res.status(201).json({ id: user.id, name: user.name, email: user.email });
-} catch (err) {
-  console.error("❌ Error en register:", err); // <---- log real del error
-  return res.status(500).json({ message: "Server error" });
-}
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
+    return res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
 
 export const login = async (req, res) => {
@@ -32,23 +30,19 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
-// verificar la contraseña
+
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ message: "Invalid credentials" });
-// generar el token
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-// responder con el token y datos del usuario
-    return res.json({
-      token,
-      user: { id: user.id, name: user.name, email: user.email }
-    });
-} catch (err) {
-  console.error("❌ Error en register:", err); // <---- log real del error
-  return res.status(500).json({ message: "Server error" });
-}
 
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+    return res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const me = async (req, res) => {
+  return res.json({ user: req.user });
 };

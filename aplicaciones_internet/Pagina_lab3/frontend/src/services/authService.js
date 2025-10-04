@@ -1,4 +1,4 @@
-// src/services/authService.js
+// frontend/src/services/authService.js
 const API_URL = "http://localhost:4000/api/auth";
 
 export const login = async (email, password) => {
@@ -7,9 +7,8 @@ export const login = async (email, password) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-
   if (!res.ok) throw new Error("Login failed");
-  return await res.json(); // { token, user }
+  return await res.json();
 };
 
 export const register = async (name, email, password) => {
@@ -18,7 +17,6 @@ export const register = async (name, email, password) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password }),
   });
-
   if (!res.ok) throw new Error("Registration failed");
-  return await res.json(); // { id, name, email }
+  return await res.json();
 };

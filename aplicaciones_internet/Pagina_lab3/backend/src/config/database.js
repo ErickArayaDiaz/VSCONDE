@@ -1,3 +1,4 @@
+// backend/src/config/database.js
 import { Sequelize } from "sequelize";
 
 // Usamos SQLite para laboratorio: crea un archivo local database.sqlite

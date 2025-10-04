@@ -1,3 +1,4 @@
+// src/components/Login.jsx
 import { useState } from "react";
 
 export default function Login({ onLogin }) {

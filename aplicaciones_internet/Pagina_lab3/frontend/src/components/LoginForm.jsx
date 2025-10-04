@@ -1,51 +1,27 @@
-// src/components/LoginForm.jsx
+// frontend/src/components/LoginForm.jsx
 import { useState } from "react";
+import { login } from "../services/authService.js";
 
 export default function LoginForm({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email || !password) return;
-
+  const handleLogin = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem("token", data.token);
-        onLogin(data.user);
-      } else alert(data.message || "Error al iniciar sesión");
+      const data = await login(email, password);
+      localStorage.setItem("token", data.token);
+      onLogin(data.user);
     } catch (err) {
-      console.error(err);
-      alert("Error al iniciar sesión");
+      alert(err.message || "Error al iniciar sesión");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 border rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Iniciar Sesión</h2>
-      <input
-        type="email"
-        placeholder="Correo"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="border p-2 w-full mb-2"
-      />
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="border p-2 w-full mb-4"
-      />
-      <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">
-        Entrar
-      </button>
-    </form>
+    <div className="p-4 max-w-sm mx-auto border rounded shadow">
+      <h2 className="text-xl font-bold mb-2">Iniciar sesión</h2>
+      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="border p-1 mb-2 w-full" />
+      <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="border p-1 mb-2 w-full" />
+      <button onClick={handleLogin} className="bg-blue-500 text-white px-3 py-1 rounded w-full">Iniciar sesión</button>
+    </div>
   );
 }
