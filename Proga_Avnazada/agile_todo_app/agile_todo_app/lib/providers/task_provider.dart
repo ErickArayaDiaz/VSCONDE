@@ -1,3 +1,4 @@
+// lib/providers/task_provider.dart
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../models/task.dart';
@@ -21,8 +22,8 @@ class TaskProvider extends ChangeNotifier {
     _taskBox = await HiveService.openTaskBox();
     tasks = _taskBox!.values.toList();
 
-    // sincroniza con Supabase usando grupo actual o "default"
-    await _syncService.syncTasks(currentGroupId ?? "default");
+    // sincroniza con Supabase (sin argumentos)
+    await _syncService.syncTasks();
     tasks = _taskBox!.values.toList();
 
     notifyListeners();
@@ -52,7 +53,7 @@ class TaskProvider extends ChangeNotifier {
     }
     await _taskBox!.put(task.id, task);
 
-    await _syncService.syncTasks(currentGroupId ?? "default");
+    await _syncService.syncTasks(); // sin argumentos
     await _loadGroupTasks();
   }
 
@@ -60,7 +61,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> updateTask(Task task) async {
     await _taskBox!.put(task.id, task);
 
-    await _syncService.syncTasks(currentGroupId ?? "default");
+    await _syncService.syncTasks(); // sin argumentos
     await _loadGroupTasks();
   }
 
@@ -68,7 +69,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> deleteTask(String taskId) async {
     await _taskBox!.delete(taskId);
 
-    await _syncService.syncTasks(currentGroupId ?? "default");
+    await _syncService.syncTasks(); // sin argumentos
     await _loadGroupTasks();
   }
 

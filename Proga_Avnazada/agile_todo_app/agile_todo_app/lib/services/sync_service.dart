@@ -1,4 +1,4 @@
-// services/sync_service.dart
+// 📦 services/sync_service.dart
 import '../models/task.dart';
 import 'hive_service.dart';
 import 'task_supabase_service.dart';
@@ -6,34 +6,36 @@ import 'task_supabase_service.dart';
 class SyncService {
   final TaskSupabaseService _supabaseService = TaskSupabaseService();
 
-  /// Sincroniza las tareas de un grupo entre Hive y Supabase
-  Future<void> syncTasks(String groupId) async {
+  Future<void> syncTasks() async {
     final taskBox = await HiveService.openTaskBox();
 
-    // 🔼 Subir tareas locales al servidor
+    // 🔼 Subir tareas locales a Supabase
     for (var task in taskBox.values) {
-      if (task.groupId != groupId)
-        continue; // solo sincroniza las del grupo actual
-
       try {
-        // si la tarea ya existe en Supabase → update, sino → insert
         await _supabaseService.uploadTask(task);
       } catch (e) {
-        print('Error uploading task ${task.id}: $e');
+        print('❌ Error uploading task ${task.id}: $e');
       }
     }
 
     // 🔽 Descargar tareas desde Supabase
-    final cloudTasks = await _supabaseService.fetchTasks();
-    for (var t in cloudTasks) {
-      if (!taskBox.containsKey(t.id)) {
-        await taskBox.put(t.id, t);
-      } else {
-        final local = taskBox.get(t.id);
-        if (local != null && t.version > local.version) {
+    try {
+      final cloudTasks = await _supabaseService.fetchTasks();
+
+      for (var t in cloudTasks) {
+        if (!taskBox.containsKey(t.id)) {
+          // Nueva tarea del servidor → agregar localmente
           await taskBox.put(t.id, t);
+        } else {
+          final local = taskBox.get(t.id);
+          // Actualizar si la versión en la nube es más reciente
+          if (local != null && t.version > local.version) {
+            await taskBox.put(t.id, t);
+          }
         }
       }
+    } catch (e) {
+      print('❌ Error fetching tasks from Supabase: $e');
     }
   }
 }
