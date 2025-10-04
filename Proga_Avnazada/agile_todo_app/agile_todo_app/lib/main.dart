@@ -1,0 +1,67 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart' as provider;
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'utils/constants.dart';
+import 'models/user.dart';
+import 'providers/auth_provider.dart';
+import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializar Supabase
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
+
+  // Inicializar Hive
+  await Hive.initFlutter();
+  Hive.registerAdapter(LocalUserAdapter());
+  await Hive.openBox<LocalUser>('local_user');
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return provider.MultiProvider(
+      providers: [
+        provider.ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Agile ToDo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: const Root(),
+      ),
+    );
+  }
+}
+
+class Root extends StatelessWidget {
+  const Root({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = provider.Provider.of<AuthProvider>(context);
+    // Mientras carga estado:
+    if (auth.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Si hay usuario logueado, ir a Home
+    if (auth.localUser != null) {
+      return const HomeScreen();
+    }
+
+    // Si no, mostrar login
+    return const LoginScreen();
+  }
+}
