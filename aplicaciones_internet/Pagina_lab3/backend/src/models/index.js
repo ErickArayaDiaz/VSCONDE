@@ -1,3 +1,4 @@
+// src/models/index.js
 import sequelize from "../config/db.js";
 import UserModel from "./user.js";
 import TaskModel from "./task.js";

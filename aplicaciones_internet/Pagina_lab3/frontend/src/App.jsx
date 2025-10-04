@@ -1,26 +1,15 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Navbar from "./components/Navbar";
+// src/App.jsx
+import TaskList from "./components/TaskList.jsx";
+import "./App.css";
 
 function App() {
-  const isAuth = !!localStorage.getItem("token");
-
   return (
-    <BrowserRouter>
-      {isAuth && <Navbar />}
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route
-          path="/dashboard"
-          element={isAuth ? <Dashboard /> : <Navigate to="/login" />}
-        />
-        <Route path="*" element={<Navigate to={isAuth ? "/dashboard" : "/login"} />} />
-      </Routes>
-    </BrowserRouter>
+    <div className="p-4">
+      <h1>Vite + React + Tasks</h1>
+      <TaskList />
+    </div>
   );
 }
 
 export default App;
+

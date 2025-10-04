@@ -65,15 +65,15 @@ class Task extends HiveObject {
   /// 🔹 Conversión desde Supabase
   factory Task.fromMap(Map<String, dynamic> map) {
     return Task(
-      id: map['id'].toString(),
-      title: map['title'] ?? '',
-      description: map['description'] ?? '',
-      status: map['status'] ?? 'todo',
-      createdAt: DateTime.tryParse(map['created_at'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(map['updated_at'] ?? '') ?? DateTime.now(),
-      version: map['version'] ?? 1,
-      groupId: map['group_id'] ?? 'default',
-    );
+      id: map['id'] as String,
+      title: map['title'] as String,
+      description: map['description'] as String? ?? '',
+      status: map['status'] as String? ?? "todo",
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
+      version: map['version'] as int? ?? 1,
+      history: [], // puedes cargarlo más adelante si lo sincronizas
+    )..groupId = map['group_id'] as String? ?? "default";
   }
 
   /// 🔹 Conversión hacia Supabase

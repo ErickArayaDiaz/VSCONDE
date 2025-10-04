@@ -1,39 +1,24 @@
+// src/components/TaskList.jsx
 import { useEffect, useState } from "react";
-import API from "../services/api";
+import { getTasks } from "../services/taskService.js"; // lo crearemos en el siguiente paso
 
 export default function TaskList() {
   const [tasks, setTasks] = useState([]);
-
-  const fetchTasks = async () => {
-    try {
-      const { data } = await API.get("/tasks");
-      setTasks(data);
-    } catch (error) {
-      console.error("Error al obtener tareas", error);
-    }
-  };
-
-  const deleteTask = async (id) => {
-    try {
-      await API.delete(`/tasks/${id}`);
-      fetchTasks();
-    } catch (error) {
-      console.error("Error al eliminar tarea", error);
-    }
-  };
+  const token = localStorage.getItem("token"); // token guardado tras login
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    if (token) {
+      getTasks(token).then(setTasks);
+    }
+  }, [token]);
 
   return (
     <div>
-      <h3>Mis tareas</h3>
+      <h2>Mis tareas</h2>
       <ul>
         {tasks.map((task) => (
           <li key={task.id}>
-            {task.title} 
-            <button onClick={() => deleteTask(task.id)}>❌</button>
+            {task.title} - {task.completed ? "✅" : "❌"}
           </li>
         ))}
       </ul>

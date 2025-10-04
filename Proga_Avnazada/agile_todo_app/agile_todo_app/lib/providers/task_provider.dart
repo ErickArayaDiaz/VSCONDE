@@ -21,7 +21,8 @@ class TaskProvider extends ChangeNotifier {
     _taskBox = await HiveService.openTaskBox();
     tasks = _taskBox!.values.toList();
 
-    await _syncService.syncTasks(); // sincroniza con Supabase
+    // sincroniza con Supabase usando grupo actual o "default"
+    await _syncService.syncTasks(currentGroupId ?? "default");
     tasks = _taskBox!.values.toList();
 
     notifyListeners();
@@ -51,7 +52,7 @@ class TaskProvider extends ChangeNotifier {
     }
     await _taskBox!.put(task.id, task);
 
-    await _syncService.syncTasks();
+    await _syncService.syncTasks(currentGroupId ?? "default");
     await _loadGroupTasks();
   }
 
@@ -59,7 +60,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> updateTask(Task task) async {
     await _taskBox!.put(task.id, task);
 
-    await _syncService.syncTasks();
+    await _syncService.syncTasks(currentGroupId ?? "default");
     await _loadGroupTasks();
   }
 
@@ -67,7 +68,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> deleteTask(String taskId) async {
     await _taskBox!.delete(taskId);
 
-    await _syncService.syncTasks();
+    await _syncService.syncTasks(currentGroupId ?? "default");
     await _loadGroupTasks();
   }
 
@@ -76,8 +77,7 @@ class TaskProvider extends ChangeNotifier {
     return tasks.where((t) => t.status == status).toList();
   }
 
-  //añadido para update Task status
-
+  // Actualizar estado de tarea (para drag & drop)
   void updateTaskStatus(Task task, String newStatus) {
     final index = tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {

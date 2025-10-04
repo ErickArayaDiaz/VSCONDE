@@ -1,32 +1,66 @@
-const { Task } = require('../models');
+// src/controllers/taskController.js
+import { Task } from "../models/index.js";
 
-exports.getTasks = async (req, res) => {
-  const { status } = req.query;
-  const where = { userId: req.user.id };
-  if (status) where.status = status;
-  const tasks = await Task.findAll({ where });
-  res.json(tasks);
+export const getTasks = async (req, res) => {
+  try {
+    const tasks = await Task.findAll({ where: { userId: req.user.id } });
+    res.json(tasks);
+} catch (err) {
+  console.error("❌ Error en getTasks:", err);
+  res.status(500).json({ message: "Error fetching tasks" });
+}
+
 };
 
-exports.createTask = async (req, res) => {
-  const { title, description, due_date, priority } = req.body;
-  if (!title) return res.status(400).json({ message: 'Title required' });
-  const task = await Task.create({ title, description, due_date, priority, userId: req.user.id });
-  res.status(201).json(task);
+export const createTask = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const task = await Task.create({
+      title,
+      description,
+      userId: req.user.id,
+    });
+    res.status(201).json(task);
+} catch (err) {
+  console.error("❌ Error en getTasks:", err);
+  res.status(500).json({ message: "Error fetching tasks" });
+}
+
 };
 
-exports.updateTask = async (req, res) => {
-  const { id } = req.params;
-  const task = await Task.findOne({ where: { id, userId: req.user.id } });
-  if (!task) return res.status(404).json({ message: 'Not found' });
-  await task.update(req.body);
-  res.json(task);
+export const updateTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, completed } = req.body;
+
+    const task = await Task.findOne({ where: { id, userId: req.user.id } });
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    task.title = title ?? task.title;
+    task.description = description ?? task.description;
+    task.completed = completed ?? task.completed;
+    await task.save();
+
+    res.json(task);
+} catch (err) {
+  console.error("❌ Error en getTasks:", err);
+  res.status(500).json({ message: "Error fetching tasks" });
+}
+
 };
 
-exports.deleteTask = async (req, res) => {
-  const { id } = req.params;
-  const task = await Task.findOne({ where: { id, userId: req.user.id } });
-  if (!task) return res.status(404).json({ message: 'Not found' });
-  await task.destroy();
-  res.json({ message: 'Deleted' });
+export const deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const task = await Task.findOne({ where: { id, userId: req.user.id } });
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    await task.destroy();
+    res.json({ message: "Task deleted" });
+} catch (err) {
+  console.error("❌ Error en getTasks:", err);
+  res.status(500).json({ message: "Error fetching tasks" });
+}
+
 };
