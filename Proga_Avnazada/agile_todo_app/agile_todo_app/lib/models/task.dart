@@ -30,7 +30,7 @@ class Task extends HiveObject {
   List<TaskHistory> history; // historial de cambios
 
   @HiveField(8)
-  String groupId; // NUEVO campo para tablero colaborativo
+  String? groupId; // grupo al que pertenece la tarea
 
   Task({
     required this.id,
@@ -41,7 +41,7 @@ class Task extends HiveObject {
     DateTime? updatedAt,
     this.version = 1,
     List<TaskHistory>? history,
-    this.groupId = "default",
+    this.groupId,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now(),
         history = history ?? [];
@@ -62,21 +62,22 @@ class Task extends HiveObject {
     updatedAt = DateTime.now();
   }
 
-  /// 🔹 Conversión desde Supabase
+  /// 🔄 Conversión desde Supabase/Map
   factory Task.fromMap(Map<String, dynamic> map) {
     return Task(
       id: map['id'] as String,
       title: map['title'] as String,
-      description: map['description'] as String? ?? '',
-      status: map['status'] as String? ?? "todo",
-      createdAt: DateTime.parse(map['created_at'] as String),
-      updatedAt: DateTime.parse(map['updated_at'] as String),
-      version: map['version'] as int? ?? 1,
-      history: [], // puedes cargarlo más adelante si lo sincronizas
-    )..groupId = map['group_id'] as String? ?? "default";
+      description: map['description'] ?? '',
+      status: map['status'] ?? 'todo',
+      createdAt: DateTime.tryParse(map['created_at'] ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(map['updated_at'] ?? '') ?? DateTime.now(),
+      version: map['version'] ?? 1,
+      groupId: map['group_id'],
+      history: [], // Supabase no almacena historial, solo local
+    );
   }
 
-  /// 🔹 Conversión hacia Supabase
+  /// 🔄 Conversión a Map (para Supabase)
   Map<String, dynamic> toMap() {
     return {
       'id': id,

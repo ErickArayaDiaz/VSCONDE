@@ -19,7 +19,7 @@ app.use("/api/tasks", taskRoutes);
 //({ alter: true }) altera no cambia nada en la base de datos
 //({ force: true }) fuerza a cambiar la base de datos, elimina todo y crea las tablas de nuevo
 //() crea las tablas si no existen, pero no altera nada
-sequelize.sync({ alter: true }) // Cambia a true solo si quieres recrear las tablas
+sequelize.sync({ force: true }) // Cambia a true solo si quieres recrear las tablas
   .then(() => {
     console.log("✅ DB SQLite conectada y tablas sincronizadas");
 

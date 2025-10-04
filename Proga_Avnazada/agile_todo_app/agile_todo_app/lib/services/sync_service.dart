@@ -17,14 +17,14 @@ class SyncService {
 
       try {
         // si la tarea ya existe en Supabase → update, sino → insert
-        await _supabaseService.updateTask(task);
+        await _supabaseService.uploadTask(task);
       } catch (e) {
-        await _supabaseService.addTask(task);
+        print('Error uploading task ${task.id}: $e');
       }
     }
 
     // 🔽 Descargar tareas desde Supabase
-    final cloudTasks = await _supabaseService.fetchTasks(groupId);
+    final cloudTasks = await _supabaseService.fetchTasks();
     for (var t in cloudTasks) {
       if (!taskBox.containsKey(t.id)) {
         await taskBox.put(t.id, t);
