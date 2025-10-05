@@ -1,4 +1,4 @@
-// src/components/TaskList.jsx
+// frontend/src/components/TaskList.jsx
 import { useEffect, useState } from "react";
 import { getTasks, createTask, updateTask, deleteTask } from "../services/taskService";
 
@@ -6,19 +6,14 @@ export default function TaskList() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const token = localStorage.getItem("token");
 
   const fetchTasks = async () => {
-    setLoading(true);
     try {
       const data = await getTasks(token);
       setTasks(data);
-    } catch (err) {
+    } catch {
       alert("Error al obtener tareas");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -33,7 +28,7 @@ export default function TaskList() {
       setTasks([...tasks, newTask]);
       setTitle("");
       setDescription("");
-    } catch (err) {
+    } catch {
       alert("Error al crear tarea");
     }
   };
@@ -56,42 +51,72 @@ export default function TaskList() {
     }
   };
 
-  if (loading) return <p>Cargando tareas...</p>;
+  const sinIniciar = tasks.filter(t => !t.completed);
+  const completadas = tasks.filter(t => t.completed);
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-2">Tareas</h2>
-      <input
-        placeholder="Título"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="border p-2 mb-2 mr-2 w-full"
-      />
-      <input
-        placeholder="Descripción"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        className="border p-2 mb-2 mr-2 w-full"
-      />
-      <button onClick={handleCreate} className="bg-blue-500 text-white p-2 mb-4 w-full">
-        Agregar
-      </button>
+    <div>
+      <div className="mb-4">
+        <input
+          placeholder="Título"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          className="border p-2 rounded w-full mb-2"
+        />
+        <input
+          placeholder="Descripción"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          className="border p-2 rounded w-full mb-2"
+        />
+        <button onClick={handleCreate} className="bg-blue-500 text-white px-3 py-2 rounded w-full">
+          Agregar
+        </button>
+      </div>
 
-      <ul>
-        {tasks.map(task => (
-          <li key={task.id} className="flex items-center justify-between border p-2 mb-2">
-            <div>
-              <input type="checkbox" checked={task.completed} onChange={() => handleToggle(task)} />
-              <span className={`ml-2 ${task.completed ? "line-through" : ""}`}>
-                {task.title}: {task.description}
-              </span>
+      <div className="grid grid-cols-2 gap-4">
+        {/* Sin iniciar */}
+        <div>
+          <h3 className="font-bold text-lg mb-2">Sin iniciar</h3>
+          {sinIniciar.map(task => (
+            <div key={task.id} className="border p-2 rounded shadow mb-2 bg-yellow-50">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h4 className="font-semibold">{task.title}</h4>
+                  <p>{task.description}</p>
+                </div>
+                <div className="flex gap-1">
+                  <input type="checkbox" checked={task.completed} onChange={() => handleToggle(task)} />
+                  <button onClick={() => handleDelete(task.id)} className="bg-red-500 text-white px-2 rounded">
+                    X
+                  </button>
+                </div>
+              </div>
             </div>
-            <button onClick={() => handleDelete(task.id)} className="bg-red-500 text-white p-1">
-              Eliminar
-            </button>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+
+        {/* Completadas */}
+        <div>
+          <h3 className="font-bold text-lg mb-2">Completadas</h3>
+          {completadas.map(task => (
+            <div key={task.id} className="border p-2 rounded shadow mb-2 bg-green-50">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h4 className="font-semibold line-through">{task.title}</h4>
+                  <p className="line-through">{task.description}</p>
+                </div>
+                <div className="flex gap-1">
+                  <input type="checkbox" checked={task.completed} onChange={() => handleToggle(task)} />
+                  <button onClick={() => handleDelete(task.id)} className="bg-red-500 text-white px-2 rounded">
+                    X
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

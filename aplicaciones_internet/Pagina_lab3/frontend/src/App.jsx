@@ -35,30 +35,49 @@ export default function App() {
   const PrivateRoute = ({ children }) => (user ? children : <Navigate to="/login" />);
 
   return (
-    <div className="min-h-screen p-4 bg-gray-100">
-      {/* Botón de logout visible solo si hay usuario */}
-      {user && (
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-3 py-1 rounded"
-          >
-            Logout
-          </button>
-        </div>
-      )}
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
+        {/* Botón de logout visible solo si hay usuario */}
+        {user && (
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-3 py-1 rounded"
+            >
+              Logout
+            </button>
+          </div>
+        )}
 
-      <Routes>
-        {/* Ruta protegida */}
-        <Route path="/" element={<PrivateRoute><TaskList /></PrivateRoute>} />
+        <Routes>
+          {/* Ruta protegida */}
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <TaskBoard user={user} />
+              </PrivateRoute>
+            }
+          />
 
-        {/* Rutas públicas */}
-        {!user && <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />}
-        {!user && <Route path="/register" element={<RegisterForm onRegister={handleRegister} />} />}
+          {/* Rutas públicas */}
+          {!user && <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />}
+          {!user && <Route path="/register" element={<RegisterForm onRegister={handleRegister} />} />}
 
-        {/* Redirige todo lo demás a "/" */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+          {/* Redirige todo lo demás a "/" */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </div>
+    </div>
+  );
+}
+
+// TaskBoard.jsx
+function TaskBoard({ user }) {
+  return (
+    <div>
+      <h1 className="text-center text-2xl font-bold mb-4">Bienvenido, {user.name}</h1>
+      <TaskList />
     </div>
   );
 }
