@@ -1,3 +1,5 @@
-// src/api.js
-export const API_URL = "http://localhost:4000/api";
-export const LOGIN_URL = "http://localhost:4000/login";
+// frontend/src/api.js
+export const API_URL = import.meta.env.VITE_API_URL;
+export const LOGIN_URL = `${API_URL}/auth/login`;
+export const REGISTER_URL = `${API_URL}/auth/register`;
+export const TASKS_URL = `${API_URL}/tasks`;

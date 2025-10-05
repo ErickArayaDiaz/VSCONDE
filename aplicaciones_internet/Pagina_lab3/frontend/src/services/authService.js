@@ -7,8 +7,9 @@ export const login = async (email, password) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
+
   if (!res.ok) throw new Error("Login failed");
-  return await res.json();
+  return await res.json(); // { token, user }
 };
 
 export const register = async (name, email, password) => {
@@ -17,6 +18,7 @@ export const register = async (name, email, password) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password }),
   });
+
   if (!res.ok) throw new Error("Registration failed");
-  return await res.json();
+  return await res.json(); // { token, user }
 };
