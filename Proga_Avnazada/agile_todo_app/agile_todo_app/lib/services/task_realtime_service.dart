@@ -1,67 +1,124 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+// lib/services/task_realtime_service.dart
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/task.dart';
+import '../models/task_history.dart';
 import '../providers/task_provider.dart';
 
 class TaskRealtimeService {
   final SupabaseClient _client = Supabase.instance.client;
-  RealtimeChannel? _channel;
+  RealtimeChannel? _taskChannel;
+  RealtimeChannel? _historyChannel;
 
-  /// Suscribir a cambios en la tabla `tasks` de un grupo
+  /// 📡 Suscripción a cambios en `tasks`
   void subscribeToGroupTasks(String groupId, TaskProvider taskProvider) {
-    // Cierra suscripciones previas
-    _channel?.unsubscribe();
+    _taskChannel?.unsubscribe();
+    _taskChannel = _client.channel('public:tasks:$groupId');
 
-    _channel = _client.channel('public:tasks')
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(
-          event: 'INSERT',
-          schema: 'public',
-          table: 'tasks',
-          filter: 'group_id=eq.$groupId',
-        ),
-        (payload, [ref]) {
-          debugPrint('Nueva tarea añadida: ${payload['new']}');
-          final task = Task.fromMap(payload['new'] as Map<String, dynamic>);
-          taskProvider.addTask(task);
-        },
-      )
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tasks',
-          filter: 'group_id=eq.$groupId',
-        ),
-        (payload, [ref]) {
-          debugPrint('Tarea actualizada: ${payload['new']}');
-          final task = Task.fromMap(payload['new'] as Map<String, dynamic>);
-          taskProvider.updateTask(task);
-        },
-      )
-      ..on(
-        RealtimeListenTypes.postgresChanges,
-        ChannelFilter(
-          event: 'DELETE',
-          schema: 'public',
-          table: 'tasks',
-          filter: 'group_id=eq.$groupId',
-        ),
-        (payload, [ref]) {
-          debugPrint('Tarea eliminada: ${payload['old']}');
-          final taskId =
-              (payload['old'] as Map<String, dynamic>)['id'].toString();
-          taskProvider.deleteTask(taskId);
-        },
-      )
-      ..subscribe();
+    // INSERT
+    _taskChannel!.on(
+      RealtimeListenTypes.postgresChanges,
+      ChannelFilter(
+        event: 'INSERT',
+        schema: 'public',
+        table: 'tasks',
+        filter: 'group_id=eq.$groupId',
+      ),
+      (payload, [ref]) {
+        try {
+          final data = payload['new'] ?? payload['record'];
+          if (data != null) {
+            final task = Task.fromMap(Map<String, dynamic>.from(data as Map));
+            taskProvider.addTask(task);
+          }
+        } catch (e, st) {
+          debugPrint('❌ Error procesando INSERT: $e\n$st');
+        }
+      },
+    );
+
+    // UPDATE
+    _taskChannel!.on(
+      RealtimeListenTypes.postgresChanges,
+      ChannelFilter(
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tasks',
+        filter: 'group_id=eq.$groupId',
+      ),
+      (payload, [ref]) {
+        try {
+          final data = payload['new'] ?? payload['record'];
+          if (data != null) {
+            final task = Task.fromMap(Map<String, dynamic>.from(data as Map));
+            taskProvider.updateTask(task);
+          }
+        } catch (e, st) {
+          debugPrint('❌ Error procesando UPDATE: $e\n$st');
+        }
+      },
+    );
+
+    // DELETE
+    _taskChannel!.on(
+      RealtimeListenTypes.postgresChanges,
+      ChannelFilter(
+        event: 'DELETE',
+        schema: 'public',
+        table: 'tasks',
+        filter: 'group_id=eq.$groupId',
+      ),
+      (payload, [ref]) {
+        try {
+          final oldData = payload['old'] ?? payload['record'];
+          if (oldData != null) {
+            final id = (oldData as Map)['id'].toString();
+            taskProvider.deleteTask(id);
+          }
+        } catch (e, st) {
+          debugPrint('❌ Error procesando DELETE: $e\n$st');
+        }
+      },
+    );
+
+    _taskChannel!.subscribe();
   }
 
-  /// Cierra la suscripción
+  /// 📡 Suscripción a cambios en `task_history`
+  void subscribeToHistory(String groupId, TaskProvider taskProvider) {
+    _historyChannel?.unsubscribe();
+    _historyChannel = _client.channel('public:task_history:$groupId');
+
+    _historyChannel!.on(
+      RealtimeListenTypes.postgresChanges,
+      ChannelFilter(
+        event: '*', // INSERT / UPDATE / DELETE
+        schema: 'public',
+        table: 'task_history',
+        filter: 'group_id=eq.$groupId',
+      ),
+      (payload, [ref]) {
+        try {
+          final data = payload['new'] ?? payload['record'];
+          if (data != null) {
+            final history =
+                TaskHistory.fromMap(Map<String, dynamic>.from(data as Map));
+            taskProvider.addHistory(history);
+          }
+        } catch (e, st) {
+          debugPrint('❌ Error procesando realtime history: $e\n$st');
+        }
+      },
+    );
+
+    _historyChannel!.subscribe();
+  }
+
+  /// ❌ Cierra las suscripciones
   void unsubscribe() {
-    _channel?.unsubscribe();
-    _channel = null;
+    _taskChannel?.unsubscribe();
+    _historyChannel?.unsubscribe();
+    _taskChannel = null;
+    _historyChannel = null;
   }
 }

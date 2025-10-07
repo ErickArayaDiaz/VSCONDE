@@ -1,7 +1,9 @@
+// lib/screens/task_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
+import 'task_history_screen.dart';
 
 class TaskScreen extends StatelessWidget {
   const TaskScreen({super.key});
@@ -50,6 +52,17 @@ class TaskScreen extends StatelessWidget {
                     title: Text(task.title),
                     subtitle: Text(task.description),
                     onTap: () => _showEditTaskDialog(context, provider, task),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.history),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TaskHistoryScreen(taskId: task.id),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 );
               },

@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:hive_flutter/hive_flutter.dart';

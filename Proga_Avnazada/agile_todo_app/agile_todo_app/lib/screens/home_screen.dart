@@ -1,35 +1,56 @@
+// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import 'login_screen.dart';
+import '../providers/task_provider.dart';
+import 'task_screen.dart';
+import 'group_screen.dart';
+import 'group_history_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
+    final taskProvider = Provider.of<TaskProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agile ToDo - Home'),
-        actions: [
-          IconButton(
-              onPressed: () async {
-                await auth.signOut();
-                if (!context.mounted) return;
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()));
-              },
-              icon: const Icon(Icons.logout))
-        ],
-      ),
+      appBar: AppBar(title: const Text("Agile ToDo - Home")),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Bienvenido, ${auth.localUser?.email ?? 'Usuario'}'),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.view_kanban),
+              label: const Text("Tablero Kanban"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TaskScreen()),
+                );
+              },
+            ),
             const SizedBox(height: 16),
-            const Text(
-                'Aquí irá la lista de grupos y proyectos (más adelante).'),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.history),
+              label: const Text("Historial del Grupo"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const GroupHistoryScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.group),
+              label: const Text("Gestión de Grupos"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const GroupScreen()),
+                );
+              },
+            ),
           ],
         ),
       ),

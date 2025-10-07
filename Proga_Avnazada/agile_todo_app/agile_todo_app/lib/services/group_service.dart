@@ -1,12 +1,17 @@
+// lib/services/group_service.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GroupService {
   final _supabase = Supabase.instance.client;
 
   Future<String> createGroup(String name, String userId) async {
-    final res = await _supabase.from('groups').insert({
-      'name': name,
-    }).select().single();
+    final res = await _supabase
+        .from('groups')
+        .insert({
+          'name': name,
+        })
+        .select()
+        .single();
 
     final groupId = res['id'];
 
@@ -29,7 +34,8 @@ class GroupService {
     return res;
   }
 
-  Future<void> addMember(String groupId, String userId, {String role = 'member'}) async {
+  Future<void> addMember(String groupId, String userId,
+      {String role = 'member'}) async {
     await _supabase.from('group_members').insert({
       'group_id': groupId,
       'user_id': userId,

@@ -17,11 +17,11 @@ class TaskHistoryAdapter extends TypeAdapter<TaskHistory> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return TaskHistory(
-      title: fields[0] as String,
-      description: fields[1] as String,
-      status: fields[2] as String,
-      updatedAt: fields[3] as DateTime,
-      version: fields[4] as int,
+      id: fields[0] as String,
+      taskId: fields[1] as String,
+      userId: fields[2] as String,
+      action: fields[3] as String,
+      timestamp: fields[4] as DateTime?,
     );
   }
 
@@ -30,15 +30,15 @@ class TaskHistoryAdapter extends TypeAdapter<TaskHistory> {
     writer
       ..writeByte(5)
       ..writeByte(0)
-      ..write(obj.title)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.description)
+      ..write(obj.taskId)
       ..writeByte(2)
-      ..write(obj.status)
+      ..write(obj.userId)
       ..writeByte(3)
-      ..write(obj.updatedAt)
+      ..write(obj.action)
       ..writeByte(4)
-      ..write(obj.version);
+      ..write(obj.timestamp);
   }
 
   @override

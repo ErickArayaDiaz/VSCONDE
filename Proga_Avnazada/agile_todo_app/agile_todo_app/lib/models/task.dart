@@ -46,15 +46,19 @@ class Task extends HiveObject {
         updatedAt = updatedAt ?? DateTime.now(),
         history = history ?? [];
 
-  void update({String? newTitle, String? newDesc, String? newStatus}) {
-    // Guardar en historial antes de actualizar
+  void update({
+    String? newTitle,
+    String? newDesc,
+    String? newStatus,
+    String? userId,
+  }) {
     history.add(TaskHistory(
-      title: title,
-      description: description,
-      status: status,
-      updatedAt: updatedAt,
-      version: version,
+      id: "${id}_${DateTime.now().millisecondsSinceEpoch}",
+      taskId: id,
+      userId: userId ?? "unknown",
+      action: "updated",
     ));
+
     version += 1;
     if (newTitle != null) title = newTitle;
     if (newDesc != null) description = newDesc;
@@ -62,7 +66,6 @@ class Task extends HiveObject {
     updatedAt = DateTime.now();
   }
 
-  /// 🔄 Conversión desde Supabase/Map
   factory Task.fromMap(Map<String, dynamic> map) {
     return Task(
       id: map['id'] as String,
@@ -73,11 +76,10 @@ class Task extends HiveObject {
       updatedAt: DateTime.tryParse(map['updated_at'] ?? '') ?? DateTime.now(),
       version: map['version'] ?? 1,
       groupId: map['group_id'],
-      history: [], // Supabase no almacena historial, solo local
+      history: [],
     );
   }
 
-  /// 🔄 Conversión a Map (para Supabase)
   Map<String, dynamic> toMap() {
     return {
       'id': id,
