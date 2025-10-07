@@ -22,13 +22,15 @@ class TaskHistoryAdapter extends TypeAdapter<TaskHistory> {
       userId: fields[2] as String,
       action: fields[3] as String,
       timestamp: fields[4] as DateTime?,
+      groupId: fields[5] as String?,
+      userName: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, TaskHistory obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +40,11 @@ class TaskHistoryAdapter extends TypeAdapter<TaskHistory> {
       ..writeByte(3)
       ..write(obj.action)
       ..writeByte(4)
-      ..write(obj.timestamp);
+      ..write(obj.timestamp)
+      ..writeByte(5)
+      ..write(obj.groupId)
+      ..writeByte(6)
+      ..write(obj.userName);
   }
 
   @override
