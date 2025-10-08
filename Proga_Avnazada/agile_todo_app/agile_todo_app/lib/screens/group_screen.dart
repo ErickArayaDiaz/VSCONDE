@@ -1,8 +1,9 @@
-// lib/screens/group_screen.dart
 import 'package:flutter/material.dart';
 import '../services/group_service.dart';
 import '../providers/task_provider.dart';
 import 'package:provider/provider.dart';
+
+import 'join_group_screen.dart'; // 👈 importa la pantalla de unirse
 
 class GroupScreen extends StatefulWidget {
   const GroupScreen({super.key});
@@ -64,6 +65,20 @@ class _GroupScreenState extends State<GroupScreen> {
               },
             ),
           ),
+          // 🔹 Botón para unirse a grupo (solo uno)
+          ListTile(
+            title: const Text("Unirse a grupo"),
+            trailing: const Icon(Icons.group_add),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const JoinGroupScreen()),
+              );
+              // 👇 Al volver, recargamos grupos
+              _loadGroups();
+            },
+          ),
+          // 🔹 Crear nuevo grupo
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -71,16 +86,18 @@ class _GroupScreenState extends State<GroupScreen> {
                 Expanded(
                   child: TextField(
                     controller: ctrl,
-                    decoration: const InputDecoration(hintText: "Nuevo grupo"),
+                    decoration: const InputDecoration(
+                      hintText: "Nuevo grupo",
+                    ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.add),
                   onPressed: _createGroup,
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

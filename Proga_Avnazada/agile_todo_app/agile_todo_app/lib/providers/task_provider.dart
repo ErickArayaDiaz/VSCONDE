@@ -59,6 +59,8 @@ class TaskProvider extends ChangeNotifier {
     _realtimeService.unsubscribe();
     _realtimeService.subscribeToGroupTasks(groupId, this);
     _realtimeService.subscribeToHistory(groupId, this);
+
+    debugPrint("✅ Grupo activo cambiado a: $groupId");
   }
 
   // Carga tareas según grupo seleccionado
@@ -113,13 +115,23 @@ class TaskProvider extends ChangeNotifier {
     _reloadByGroup();
   }
 
-  void updateTaskStatus(Task task, String newStatus) {
+  Future<void> updateTaskStatus(Task task, String newStatus) async {
     final index = tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
       tasks[index].status = newStatus;
-      _taskBox.put(task.id, tasks[index]);
-      _logHistory(task.id, 'moved');
-      notifyListeners();
+
+      // 🔹 Actualiza en Hive
+      await _taskBox.put(task.id, tasks[index]);
+
+      // 🔹 Guarda en historial
+      await _logHistory(task.id, 'moved');
+
+      // 🔹 Sincroniza con Supabase
+      await _syncService.syncTasks();
+      await _syncService.syncTaskHistory();
+
+      // 🔹 Refresca UI
+      _reloadByGroup();
     }
   }
 

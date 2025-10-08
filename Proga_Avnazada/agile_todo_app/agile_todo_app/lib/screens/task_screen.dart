@@ -6,6 +6,8 @@ import '../models/task.dart';
 import 'task_history_screen.dart';
 import 'package:uuid/uuid.dart';
 
+import 'join_group_screen.dart'; // ✅ nuevo import
+
 class TaskScreen extends StatelessWidget {
   const TaskScreen({super.key});
 
@@ -22,21 +24,40 @@ class TaskScreen extends StatelessWidget {
               child: _buildColumn(
                   context, taskProvider, "in_progress", "In Progress")),
           Expanded(child: _buildColumn(context, taskProvider, "done", "Done")),
+          Expanded(
+              child: _buildColumn(context, taskProvider, "finished", "Done")),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          if (taskProvider.currentGroupId == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Selecciona un grupo antes de crear tareas'),
-              ),
-            );
-            return;
-          }
-          _showAddTaskDialog(context, taskProvider);
-        },
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: "add_task",
+            child: const Icon(Icons.add),
+            onPressed: () {
+              if (taskProvider.currentGroupId == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Selecciona un grupo antes de crear tareas'),
+                  ),
+                );
+                return;
+              }
+              _showAddTaskDialog(context, taskProvider);
+            },
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: "join_group",
+            child: const Icon(Icons.group_add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const JoinGroupScreen()),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -111,8 +132,7 @@ class TaskScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               final task = Task(
-                id: _uuid.v4(), // ✅ UUID v4 en vez de milisegundos
-
+                id: _uuid.v4(),
                 title: titleCtrl.text,
                 description: descCtrl.text,
               );
@@ -130,7 +150,6 @@ class TaskScreen extends StatelessWidget {
       BuildContext context, TaskProvider provider, Task task) {
     final titleCtrl = TextEditingController(text: task.title);
     final descCtrl = TextEditingController(text: task.description);
-    String status = task.status;
 
     showDialog(
       context: context,
@@ -145,15 +164,24 @@ class TaskScreen extends StatelessWidget {
             TextField(
                 controller: descCtrl,
                 decoration: const InputDecoration(labelText: 'Descripción')),
-            DropdownButton<String>(
-              value: status,
-              items: const [
-                DropdownMenuItem(value: "todo", child: Text("To Do")),
-                DropdownMenuItem(
-                    value: "in_progress", child: Text("In Progress")),
-                DropdownMenuItem(value: "done", child: Text("Done")),
-              ],
-              onChanged: (v) => status = v ?? status,
+            // ✅ Dropdown sin setState
+            Consumer<TaskProvider>(
+              builder: (context, taskProvider, _) {
+                return DropdownButton<String>(
+                  value: task.status,
+                  onChanged: (newValue) async {
+                    if (newValue != null) {
+                      await taskProvider.updateTaskStatus(task, newValue);
+                    }
+                  },
+                  items: ['todo', 'in_progress', 'done']
+                      .map((status) => DropdownMenuItem(
+                            value: status,
+                            child: Text(status),
+                          ))
+                      .toList(),
+                );
+              },
             ),
           ],
         ),
@@ -164,9 +192,10 @@ class TaskScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               task.update(
-                  newTitle: titleCtrl.text,
-                  newDesc: descCtrl.text,
-                  newStatus: status);
+                newTitle: titleCtrl.text,
+                newDesc: descCtrl.text,
+                newStatus: task.status,
+              );
               provider.updateTask(task);
               Navigator.pop(context);
             },
