@@ -4,12 +4,15 @@ import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
 
+import 'package:uuid/uuid.dart';
+
 class KanbanBoard extends StatelessWidget {
   const KanbanBoard({super.key});
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TaskProvider>(context);
+    final _uuid = const Uuid();
 
     return Scaffold(
       appBar: AppBar(title: const Text("Kanban Board")),
@@ -36,7 +39,7 @@ class KanbanBoard extends StatelessWidget {
         onPressed: () {
           // ✅ Crear tarea con todos los campos requeridos
           final task = Task(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            id: _uuid.v4(), // ✅ UUID v4
             title: "Nueva tarea",
             description: "Descripción pendiente", // 🔹 requerido
             status: "todo",

@@ -31,7 +31,10 @@ class GroupService {
         .select('group_id, groups(name)')
         .eq('user_id', userId);
 
-    return res;
+    // ✅ castear explícitamente a List<Map<String, dynamic>>
+    final list =
+        (res as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    return list;
   }
 
   Future<void> addMember(String groupId, String userId,

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
 import 'task_history_screen.dart';
+import 'package:uuid/uuid.dart';
 
 class TaskScreen extends StatelessWidget {
   const TaskScreen({super.key});
@@ -25,7 +26,17 @@ class TaskScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
-        onPressed: () => _showAddTaskDialog(context, taskProvider),
+        onPressed: () {
+          if (taskProvider.currentGroupId == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Selecciona un grupo antes de crear tareas'),
+              ),
+            );
+            return;
+          }
+          _showAddTaskDialog(context, taskProvider);
+        },
       ),
     );
   }
@@ -76,6 +87,7 @@ class TaskScreen extends StatelessWidget {
   void _showAddTaskDialog(BuildContext context, TaskProvider provider) {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
+    final _uuid = const Uuid();
 
     showDialog(
       context: context,
@@ -99,7 +111,8 @@ class TaskScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               final task = Task(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                id: _uuid.v4(), // ✅ UUID v4 en vez de milisegundos
+
                 title: titleCtrl.text,
                 description: descCtrl.text,
               );

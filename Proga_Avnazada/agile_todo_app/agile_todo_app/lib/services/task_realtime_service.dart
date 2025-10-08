@@ -10,12 +10,10 @@ class TaskRealtimeService {
   RealtimeChannel? _taskChannel;
   RealtimeChannel? _historyChannel;
 
-  /// 📡 Suscripción a cambios en `tasks`
   void subscribeToGroupTasks(String groupId, TaskProvider taskProvider) {
     _taskChannel?.unsubscribe();
     _taskChannel = _client.channel('public:tasks:$groupId');
 
-    // INSERT
     _taskChannel!.on(
       RealtimeListenTypes.postgresChanges,
       ChannelFilter(
@@ -29,15 +27,15 @@ class TaskRealtimeService {
           final data = payload['new'] ?? payload['record'];
           if (data != null) {
             final task = Task.fromMap(Map<String, dynamic>.from(data as Map));
-            taskProvider.addTask(task);
+            // ✅ Solo mete en local, sin volver a sincronizar ni loguear
+            taskProvider.addTaskFromRealtime(task);
           }
         } catch (e, st) {
-          debugPrint('❌ Error procesando INSERT: $e\n$st');
+          debugPrint('❌ Error en INSERT: $e\n$st');
         }
       },
     );
 
-    // UPDATE
     _taskChannel!.on(
       RealtimeListenTypes.postgresChanges,
       ChannelFilter(
@@ -51,15 +49,15 @@ class TaskRealtimeService {
           final data = payload['new'] ?? payload['record'];
           if (data != null) {
             final task = Task.fromMap(Map<String, dynamic>.from(data as Map));
-            taskProvider.updateTask(task);
+            // ✅ Solo mete en local, sin volver a sincronizar ni loguear
+            taskProvider.addTaskFromRealtime(task);
           }
         } catch (e, st) {
-          debugPrint('❌ Error procesando UPDATE: $e\n$st');
+          debugPrint('❌ Error en UPDATE: $e\n$st');
         }
       },
     );
 
-    // DELETE
     _taskChannel!.on(
       RealtimeListenTypes.postgresChanges,
       ChannelFilter(
@@ -73,10 +71,12 @@ class TaskRealtimeService {
           final oldData = payload['old'] ?? payload['record'];
           if (oldData != null) {
             final id = (oldData as Map)['id'].toString();
+            // ✅ Aquí podrías implementar una variante local (p.ej. delete local)
+            // para no disparar sync; si no la tienes, deja como está.
             taskProvider.deleteTask(id);
           }
         } catch (e, st) {
-          debugPrint('❌ Error procesando DELETE: $e\n$st');
+          debugPrint('❌ Error en DELETE: $e\n$st');
         }
       },
     );
@@ -84,7 +84,6 @@ class TaskRealtimeService {
     _taskChannel!.subscribe();
   }
 
-  /// 📡 Suscripción a cambios en `task_history`
   void subscribeToHistory(String groupId, TaskProvider taskProvider) {
     _historyChannel?.unsubscribe();
     _historyChannel = _client.channel('public:task_history:$groupId');
@@ -92,7 +91,7 @@ class TaskRealtimeService {
     _historyChannel!.on(
       RealtimeListenTypes.postgresChanges,
       ChannelFilter(
-        event: '*', // INSERT / UPDATE / DELETE
+        event: '*',
         schema: 'public',
         table: 'task_history',
         filter: 'group_id=eq.$groupId',
@@ -106,7 +105,7 @@ class TaskRealtimeService {
             taskProvider.addHistory(history);
           }
         } catch (e, st) {
-          debugPrint('❌ Error procesando realtime history: $e\n$st');
+          debugPrint('❌ Error en realtime history: $e\n$st');
         }
       },
     );
@@ -114,7 +113,6 @@ class TaskRealtimeService {
     _historyChannel!.subscribe();
   }
 
-  /// ❌ Cierra las suscripciones
   void unsubscribe() {
     _taskChannel?.unsubscribe();
     _historyChannel?.unsubscribe();
